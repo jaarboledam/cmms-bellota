@@ -104,13 +104,20 @@ create table if not exists public.parametros (
   valor  jsonb not null
 );
 
--- ---------- Seguridad (Row Level Security) ----------------------------
--- Solo usuarios que iniciaron sesión pueden leer y modificar datos.
+-- ---------- Seguridad --------------------------------------------------
+-- 1) Permisos explícitos: solo el rol "authenticated" (usuarios con sesión)
+--    puede usar las tablas; el rol "anon" (visitantes sin sesión) no tiene acceso.
+--    Funciona aunque "Automatically expose new tables" esté desactivado.
+-- 2) Row Level Security: además, cada fila exige haber iniciado sesión.
+
+grant usage on schema public to authenticated;
 
 do $$
 declare t text;
 begin
   foreach t in array array['equipos','tecnicos','fallas','plan','ordenes','repuestos','parametros'] loop
+    execute format('revoke all on public.%I from anon', t);
+    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
     execute format('alter table public.%I enable row level security', t);
     execute format('drop policy if exists "lectura_autenticados" on public.%I', t);
     execute format('drop policy if exists "escritura_autenticados" on public.%I', t);
