@@ -287,8 +287,8 @@ export function deriveFallas(db: DB, ordenes: OrdenX[], per: Periodo): FallaX[] 
     porEquipo.set(f.codigo_equipo, (porEquipo.get(f.codigo_equipo) ?? 0) + s.n)
     return { ...f, equipoNombre: eq.get(f.codigo_equipo) ?? 'No existe', eventos: s.n, horasParo: s.h, mttr: s.n ? s.h / s.n : 0, pctEquipo: 0, ranking: 0 }
   })
-  // Ranking: más eventos primero; empate → más horas de paro
-  const sorted = [...base].sort((a, b) => b.eventos - a.eventos || b.horasParo - a.horasParo || a.id.localeCompare(b.id))
+  // Ranking: más eventos primero; empate → más horas de paro; empate total → la fila más abajo del catálogo (igual que el Excel)
+  const sorted = [...base].sort((a, b) => b.eventos - a.eventos || b.horasParo - a.horasParo || b.id.localeCompare(a.id))
   sorted.forEach((f, i) => (f.ranking = i + 1))
   for (const f of base) {
     const tot = porEquipo.get(f.codigo_equipo) ?? 0
